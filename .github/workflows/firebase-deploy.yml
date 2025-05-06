@@ -28,14 +28,12 @@ jobs:
         run: cd functions && npm run build
       
       - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: w9jds/firebase-action@master
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
-          projectId: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
-          channelId: live
+          args: deploy --only functions
         env:
-          FIREBASE_CLI_PREVIEWS: hostingchannels
+          GCP_SA_KEY: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
+          PROJECT_ID: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
       
       - name: Log deployment info
         run: |
