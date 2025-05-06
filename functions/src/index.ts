@@ -117,16 +117,35 @@ export const createUser = onRequest({
       displayName: `${first_name} ${last_name}`,
     });
 
+
     // // Set custom claims for role
     // await admin.auth().setCustomUserClaims(userRecord.uid, { role });
 
     // Create user document in Firestore
     const userData = {
       uid: userRecord.uid,
-      first_name,
-      last_name,
+      displayName: `${first_name} ${last_name}`,
       email,
-      role
+      role,
+      projectIds: [],
+      passwordHash: userRecord.passwordHash,
+      profile: {
+        photoURL: null,
+        bio: '',
+        title: '',
+        phone: '',
+        location: '',
+        timezone: '',
+        notifications: {
+          email: true,
+          push: true
+        },
+        metadata:  {
+          lastLogin: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      }
     };
 
     await admin.firestore().collection('users').doc(userRecord.uid).set(userData);
