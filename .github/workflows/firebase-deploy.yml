@@ -85,9 +85,15 @@ jobs:
             exit 1
           fi
 
-          # Create service account key file
+          # Create service account key file using here-document for robustness
           echo "Creating service account key file..."
-          echo "$SERVICE_ACCOUNT_JSON" > /tmp/service-account.json
+          cat <<EOF > /tmp/service-account.json
+          $SERVICE_ACCOUNT_JSON
+          EOF
+          
+          # Verify file creation (optional debug step)
+          # echo "Verifying service account file content:"
+          # cat /tmp/service-account.json
           
           # Authenticate Firebase CLI using the service account
           echo "Authenticating Firebase CLI for project $PROJECT_ID..."
