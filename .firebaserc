@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "chris-cole-test",
+    "live": "structify-chris-cole"
+  }
+}
