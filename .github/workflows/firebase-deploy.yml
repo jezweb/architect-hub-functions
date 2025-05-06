@@ -27,10 +27,12 @@ jobs:
       - name: Build
         run: cd functions && npm run build
       
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          install_components: 'beta'
 
-      - name: Deploy to Firebase
+      - name: Deploy to Cloud Functions
         run: |
           # Set project ID based on branch
           PROJECT_ID=${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
@@ -38,11 +40,14 @@ jobs:
           # Create service account key file
           echo '${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}' > /tmp/service-account.json
           
-          # Set GOOGLE_APPLICATION_CREDENTIALS environment variable
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/service-account.json
+          # Authenticate with Google Cloud
+          gcloud auth activate-service-account --key-file=/tmp/service-account.json
+          gcloud config set project $PROJECT_ID
           
-          # Deploy using Firebase CLI with --force flag to bypass checks
-          firebase deploy --only functions --project $PROJECT_ID --non-interactive --force
+          # Deploy functions directly using gcloud
+          cd functions
+          gcloud functions deploy hello --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=.
+          gcloud functions deploy createUser --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=.
           
           # Clean up
           rm /tmp/service-account.json
