@@ -68,6 +68,28 @@ jobs:
         with:
           install_components: 'beta'
 
+      - name: Create .gcloudignore in functions directory
+        run: |
+          echo "Creating .gcloudignore in functions directory..."
+          cat <<EOF > functions/.gcloudignore
+          # Default ignores for Node.js, keep these
+          node_modules/
+          # Ensure compiled JS is NOT ignored
+          !lib/
+          !lib/**/
+          # Ignore source maps if not needed for debugging in production
+          # lib/**/*.map
+          # Ignore TypeScript source files
+          src/
+          # Other ignores
+          .git/
+          .gitignore
+          *.log
+          *.local
+          EOF
+          echo "Contents of functions/.gcloudignore:"
+          cat functions/.gcloudignore
+
       - name: Deploy to Cloud Functions
         run: |
           # Set project ID based on branch
