@@ -79,18 +79,17 @@ export const createUser = onRequest({
     }
 
     // Validate request body
-    const { first_name, last_name, email, password, role } = req.body;
+    const { displayName, email, password, role } = req.body;
     
-    if (!first_name || !last_name || !email || !password || !role) {
+    if ( !displayName || !email || !password || !role) {
       logger.warn('Missing required fields', { 
-        hasFirstName: !!first_name,
-        hasLastName: !!last_name,
+        hasName: !!displayName,
         hasEmail: !!email,
         hasPassword: !!password,
         hasRole: !!role
       });
       res.status(400).json({ 
-        error: 'Missing required fields. Please provide first_name, last_name, email, password, and role.' 
+        error: 'Missing required fields. Please provide displayName, email, password, and role.' 
       });
       return;
     }
@@ -114,7 +113,7 @@ export const createUser = onRequest({
     const userRecord = await admin.auth().createUser({
       email,
       password,
-      displayName: `${first_name} ${last_name}`,
+      displayName
     });
 
 
@@ -124,7 +123,7 @@ export const createUser = onRequest({
     // Create user document in Firestore
     const userData = {
       uid: userRecord.uid,
-      displayName: `${first_name} ${last_name}`,
+      displayName: displayName,
       email,
       role,
       projectIds: [],
@@ -162,8 +161,7 @@ export const createUser = onRequest({
       message: 'User created successfully',
       user: {
         uid: userRecord.uid,
-        first_name,
-        last_name,
+        displayName,
         email,
         role,
       }
