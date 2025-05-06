@@ -116,7 +116,7 @@ export const createUser = onRequest({
       password,
       displayName: `${first_name} ${last_name}`,
     });
-    logger.info('User created successfully', userRecord);
+
 
     // // Set custom claims for role
     // await admin.auth().setCustomUserClaims(userRecord.uid, { role });
@@ -128,7 +128,7 @@ export const createUser = onRequest({
       email,
       role,
       projectIds: [],
-      passwordHash: userRecord.passwordHash || null,
+      passwordHash: userRecord?.passwordHash || null,
       profile: {
         photoURL: null,
         bio: '',
