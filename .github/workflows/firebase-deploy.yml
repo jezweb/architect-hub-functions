@@ -28,12 +28,21 @@ jobs:
         run: cd functions && npm run build
       
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only functions --non-interactive
-        env:
-          GCP_SA_KEY: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
-          PROJECT_ID: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
+        run: |
+          # Set project ID based on branch
+          PROJECT_ID=${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
+          
+          # Create service account key file
+          echo '${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}' > /tmp/service-account.json
+          
+          # Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/service-account.json
+          
+          # Deploy using Firebase CLI with explicit extensions API disable
+          npx firebase-tools deploy --only functions --non-interactive --project $PROJECT_ID --json
+          
+          # Clean up
+          rm /tmp/service-account.json
       
       - name: Log deployment info
         run: |
