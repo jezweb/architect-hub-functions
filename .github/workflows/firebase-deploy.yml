@@ -68,44 +68,34 @@ jobs:
 
       - name: Deploy to Firebase Functions
         run: |
-          # Set project ID and service account based on branch
+          # Set project ID based on branch
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             PROJECT_ID="structify-chris-cole"
-            SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_LIVE }}"
+            SERVICE_ACCOUNT_KEY="${{ secrets.FIREBASE_SERVICE_ACCOUNT_LIVE }}"
             echo "Branch is master, deploying to LIVE project: $PROJECT_ID"
           else
             PROJECT_ID="chris-cole-test"
-            SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}"
+            SERVICE_ACCOUNT_KEY="${{ secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}"
             echo "Branch is ${{ github.ref }}, deploying to TEST project: $PROJECT_ID"
           fi
-          
+
           # Validate that the secret is not empty
-          if [ -z "$SERVICE_ACCOUNT_JSON" ]; then
+          if [ -z "$SERVICE_ACCOUNT_KEY" ]; then
             echo "Error: Service account secret is empty for project $PROJECT_ID. Ensure FIREBASE_SERVICE_ACCOUNT_LIVE or FIREBASE_SERVICE_ACCOUNT_TESTING is set."
             exit 1
           fi
+          
+          # Authenticate to Google Cloud
+          echo "Authenticating to Google Cloud..."
+          echo "$SERVICE_ACCOUNT_KEY" | google-github-actions/auth@v2 \
+            --credentials-json=-
 
-          # Create service account key file using here-document for robustness
-          echo "Creating service account key file..."
-          cat <<EOF > /tmp/service-account.json
-          $SERVICE_ACCOUNT_JSON
-          EOF
+          # Set Google Cloud project
+          gcloud config set project $PROJECT_ID
           
-          # Verify file creation (optional debug step)
-          # echo "Verifying service account file content:"
-          # cat /tmp/service-account.json
-          
-          # Authenticate Firebase CLI using the service account
-          echo "Authenticating Firebase CLI for project $PROJECT_ID..."
-          firebase login:ci --keyfile /tmp/service-account.json --project $PROJECT_ID
-          
-          # Deploy all functions using Firebase CLI
+          # Deploy all functions using Firebase CLI (should use authenticated gcloud context)
           echo "Deploying functions to project $PROJECT_ID..."
           firebase deploy --only functions --project $PROJECT_ID --non-interactive --force
-          
-          # Clean up
-          echo "Cleaning up service account key file..."
-          rm /tmp/service-account.json
       
       - name: Log deployment info
         run: |
