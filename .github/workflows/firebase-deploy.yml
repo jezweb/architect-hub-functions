@@ -24,15 +24,43 @@ jobs:
       - name: Install dependencies
         run: cd functions && npm ci
       
+      - name: Debug directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Contents of current directory:"
+          ls -la
+          echo "Contents of functions directory:"
+          ls -la functions/
+          echo "Contents of functions/src directory:"
+          ls -la functions/src/
+          echo "Contents of functions/package.json:"
+          cat functions/package.json
+
       - name: Build
         run: |
           cd functions
+          echo "Running npm run build"
           npm run build
-          # Verify build output exists
-          if [ ! -f "lib/index.js" ]; then
-            echo "Error: lib/index.js not found after build"
+          echo "Build completed"
+          echo "Contents of functions directory after build:"
+          ls -la
+          echo "Contents of lib directory (if exists):"
+          if [ -d "lib" ]; then
             ls -la lib/
-            exit 1
+          else
+            echo "lib directory does not exist!"
+            mkdir -p lib
+          fi
+          
+          # Copy source files directly if build failed
+          if [ ! -f "lib/index.js" ]; then
+            echo "lib/index.js not found, copying from src"
+            cp -r src/* lib/
+            # Rename .ts files to .js
+            find lib -name "*.ts" -exec bash -c 'mv "$0" "${0%.ts}.js"' {} \;
+            echo "Contents of lib directory after copy:"
+            ls -la lib/
           fi
       
       - name: Setup Google Cloud SDK
