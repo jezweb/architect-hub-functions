@@ -1,0 +1,45 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - testing
+
+jobs:
+  deploy:
+    name: Deploy to Firebase
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'functions/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd functions && npm ci
+      
+      - name: Build
+        run: cd functions && npm run build
+      
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
+          projectId: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
+          channelId: live
+        env:
+          FIREBASE_CLI_PREVIEWS: hostingchannels
+      
+      - name: Log deployment info
+        run: |
+          echo "Deployed to project: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
