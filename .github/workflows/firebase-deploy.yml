@@ -80,17 +80,10 @@ jobs:
           gcloud auth activate-service-account --key-file=/tmp/service-account.json
           gcloud config set project $PROJECT_ID
           
-          # Deploy functions directly using gcloud
-          cd functions
-          # List files to debug
-          echo "Contents of functions directory:"
-          ls -la
-          echo "Contents of lib directory:"
-          ls -la lib/
-          
-          # Deploy with entry point specified
-          gcloud functions deploy hello --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=. --entry-point=hello
-          gcloud functions deploy createUser --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=. --entry-point=createUser
+          # Deploy functions directly using gcloud from workspace root
+          echo "Deploying functions from workspace root..."
+          gcloud functions deploy hello --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=functions --entry-point=hello
+          gcloud functions deploy createUser --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=functions --entry-point=createUser
           
           # Clean up
           rm /tmp/service-account.json
