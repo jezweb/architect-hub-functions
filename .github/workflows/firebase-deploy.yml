@@ -104,8 +104,7 @@ jobs:
           
           # Deploy functions directly using gcloud from workspace root
           echo "Deploying functions from workspace root..."
-          gcloud functions deploy hello --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=functions --entry-point=hello
-          gcloud functions deploy createUser --gen2 --runtime=nodejs22 --trigger-http --allow-unauthenticated --region=us-central1 --source=functions --entry-point=createUser
+          gcloud functions deploy --only functions
           
           # Clean up
           rm /tmp/service-account.json
