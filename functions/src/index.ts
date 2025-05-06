@@ -22,12 +22,12 @@ admin.initializeApp();
  *
  * @returns {object} Response with hello message and project ID
  */
-export const hello = onRequest({
+export const helloWorld = onRequest({
   region: 'us-central1',
   cors: true,
 }, async (req, res) => {
   // Log the request
-  logger.info('Hello endpoint called', {
+  logger.info('Hello WORLD endpoint called', {
     projectId: process.env.GCLOUD_PROJECT,
     method: req.method,
     url: req.originalUrl,
