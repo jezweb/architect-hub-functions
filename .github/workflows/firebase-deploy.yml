@@ -63,48 +63,28 @@ jobs:
             ls -la lib/
           fi
       
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          install_components: 'beta'
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
-      - name: Create .gcloudignore in functions directory
-        run: |
-          echo "Creating .gcloudignore in functions directory..."
-          cat <<EOF > functions/.gcloudignore
-          # Default ignores for Node.js, keep these
-          node_modules/
-          # Ensure compiled JS is NOT ignored
-          !lib/
-          !lib/**/
-          # Ignore source maps if not needed for debugging in production
-          # lib/**/*.map
-          # Ignore TypeScript source files
-          src/
-          # Other ignores
-          .git/
-          .gitignore
-          *.log
-          *.local
-          EOF
-          echo "Contents of functions/.gcloudignore:"
-          cat functions/.gcloudignore
-
-      - name: Deploy to Cloud Functions
+      - name: Deploy to Firebase Functions
         run: |
           # Set project ID based on branch
           PROJECT_ID=${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
           
           # Create service account key file
-          echo '${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}' > /tmp/service-account.json
+          # Use different secrets for different branches/projects
+          SERVICE_ACCOUNT_JSON=${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
+          echo "$SERVICE_ACCOUNT_JSON" > /tmp/service-account.json
           
-          # Authenticate with Google Cloud
-          gcloud auth activate-service-account --key-file=/tmp/service-account.json
-          gcloud config set project $PROJECT_ID
+          # Authenticate Firebase CLI using the service account
+          echo "Authenticating Firebase CLI..."
+          firebase login:ci --keyfile /tmp/service-account.json --project $PROJECT_ID
           
-          # Deploy functions directly using gcloud from workspace root
-          echo "Deploying functions from workspace root..."
-          gcloud functions deploy --only functions
+          # Deploy all functions using Firebase CLI
+          echo "Deploying functions to project $PROJECT_ID..."
+          # The --non-interactive flag prevents prompts
+          # The --force flag might be needed if deploying over existing functions with changes
+          firebase deploy --only functions --project $PROJECT_ID --non-interactive --force
           
           # Clean up
           rm /tmp/service-account.json
