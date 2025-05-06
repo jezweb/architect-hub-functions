@@ -30,7 +30,7 @@ jobs:
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions
+          args: deploy --only functions --non-interactive
         env:
           GCP_SA_KEY: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
           PROJECT_ID: ${{ github.ref == 'refs/heads/master' && 'structify-chris-cole' || 'chris-cole-test' }}
