@@ -66,34 +66,27 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          # Pass the correct secret JSON directly to the auth action
+          credentials_json: ${{ github.ref == 'refs/heads/master' && secrets.FIREBASE_SERVICE_ACCOUNT_LIVE || secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}
+
       - name: Deploy to Firebase Functions
         run: |
           # Set project ID based on branch
+          # Use standard shell parameter expansion for default value if needed
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             PROJECT_ID="structify-chris-cole"
-            SERVICE_ACCOUNT_KEY="${{ secrets.FIREBASE_SERVICE_ACCOUNT_LIVE }}"
             echo "Branch is master, deploying to LIVE project: $PROJECT_ID"
           else
-            PROJECT_ID="chris-cole-test"
-            SERVICE_ACCOUNT_KEY="${{ secrets.FIREBASE_SERVICE_ACCOUNT_TESTING }}"
+            PROJECT_ID="chris-cole-test" # Default or testing project
             echo "Branch is ${{ github.ref }}, deploying to TEST project: $PROJECT_ID"
           fi
-
-          # Validate that the secret is not empty
-          if [ -z "$SERVICE_ACCOUNT_KEY" ]; then
-            echo "Error: Service account secret is empty for project $PROJECT_ID. Ensure FIREBASE_SERVICE_ACCOUNT_LIVE or FIREBASE_SERVICE_ACCOUNT_TESTING is set."
-            exit 1
-          fi
           
-          # Authenticate to Google Cloud
-          echo "Authenticating to Google Cloud..."
-          echo "$SERVICE_ACCOUNT_KEY" | google-github-actions/auth@v2 \
-            --credentials-json=-
-
-          # Set Google Cloud project
-          gcloud config set project $PROJECT_ID
-          
-          # Deploy all functions using Firebase CLI (should use authenticated gcloud context)
+          # Deploy all functions using Firebase CLI
+          # Relies *only* on the ADC context set by google-github-actions/auth
+          # and the --project flag. No manual credential handling here.
           echo "Deploying functions to project $PROJECT_ID..."
           firebase deploy --only functions --project $PROJECT_ID --non-interactive --force
       
